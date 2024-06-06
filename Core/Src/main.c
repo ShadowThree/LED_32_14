@@ -225,7 +225,7 @@ void set_data(uint8_t line)
 	LED_DELAY_US(1);
 	LAT_LOW;
 	OE_LOW;
-	LED_DELAY_US(1000);
+	LED_DELAY_US(80);		// less than 100
 	OE_HIGH;
 }
 /* USER CODE END 4 */
