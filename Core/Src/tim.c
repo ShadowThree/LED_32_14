@@ -41,11 +41,11 @@ void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 72-1;
+  htim4.Init.Prescaler = 8-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1000-1;
+  htim4.Init.Period = 9-1;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
@@ -108,13 +108,13 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 #include "dbger.h"
-volatile uint16_t counter = 0;
+volatile uint32_t counter = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim == &htim4) {
-		counter++;
-		if(counter >= 1000) {
-			LOG_DBG("counter up to 1s\n");
+		if(--counter == 0) {
+			HAL_TIM_Base_Stop_IT(&htim4);
+			//LOG_DBG("tim stop\n");
 		}
 	}
 }

@@ -33,7 +33,33 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define LED_DELAY_US(us)		do {counter = us; HAL_TIM_Base_Start_IT(&htim4); while(counter);} while(0)
 
+#define CLK_LOW		HAL_GPIO_WritePin(CLK_GPIO_Port, CLK_Pin, GPIO_PIN_RESET)
+#define CLK_HIGH	HAL_GPIO_WritePin(CLK_GPIO_Port, CLK_Pin, GPIO_PIN_SET)
+
+#define LAT_LOW		HAL_GPIO_WritePin(LAT_GPIO_Port, LAT_Pin, GPIO_PIN_RESET)
+#define LAT_HIGH	HAL_GPIO_WritePin(LAT_GPIO_Port, LAT_Pin, GPIO_PIN_SET)
+
+#define OE_LOW		HAL_GPIO_WritePin(OE_GPIO_Port, OE_Pin, GPIO_PIN_RESET)
+#define OE_HIGH		HAL_GPIO_WritePin(OE_GPIO_Port, OE_Pin, GPIO_PIN_SET)
+
+#define DRI_LOW		HAL_GPIO_WritePin(DRI_GPIO_Port, DRI_Pin, GPIO_PIN_RESET)
+#define DRI_HIGH	HAL_GPIO_WritePin(DRI_GPIO_Port, DRI_Pin, GPIO_PIN_SET)
+#define DGI_LOW		HAL_GPIO_WritePin(DGI_GPIO_Port, DGI_Pin, GPIO_PIN_RESET)
+#define DGI_HIGH	HAL_GPIO_WritePin(DGI_GPIO_Port, DGI_Pin, GPIO_PIN_SET)
+#define DBI_LOW		HAL_GPIO_WritePin(DBI_GPIO_Port, DBI_Pin, GPIO_PIN_RESET)
+#define DBI_HIGH	HAL_GPIO_WritePin(DBI_GPIO_Port, DBI_Pin, GPIO_PIN_SET)
+
+// CLK	A
+#define HA_LOW		HAL_GPIO_WritePin(HA_GPIO_Port, HA_Pin, GPIO_PIN_RESET)
+#define HA_HIGH		HAL_GPIO_WritePin(HA_GPIO_Port, HA_Pin, GPIO_PIN_SET)
+// RK(BK) B
+#define HB_LOW		HAL_GPIO_WritePin(HB_GPIO_Port, HB_Pin, GPIO_PIN_RESET)
+#define HB_HIGH		HAL_GPIO_WritePin(HB_GPIO_Port, HB_Pin, GPIO_PIN_SET)
+// SDI C
+#define HC_LOW		HAL_GPIO_WritePin(HC_GPIO_Port, HC_Pin, GPIO_PIN_RESET)
+#define HC_HIGH		HAL_GPIO_WritePin(HC_GPIO_Port, HC_Pin, GPIO_PIN_SET)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,15 +71,19 @@
 
 /* USER CODE BEGIN PV */
 #define LINE_NUM		14		// 14 lines
+#define CLOUMN_NUM	32		// 32 cloumns
 #define COLOR_NUM		3			// R G B
 
-uint32_t color[LINE_NUM][COLOR_NUM] = {0};
+uint32_t color[LINE_NUM][COLOR_NUM];
+
+extern volatile uint32_t counter; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void set_line(uint8_t line);
+void set_data(uint8_t line);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -93,15 +123,33 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+#if 0	// test delay us
+	for(uint8_t i = 0; i < 10; i++) {
+		LED_DELAY_US(1000000);
+	}
+#endif
 
+	// color value init
+	for(uint8_t i = 0; i < LINE_NUM; i++) {
+		color[i][0] = 0xFFFFFFFF;
+		color[i][1] = 0;
+		color[i][2] = 0;
+	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+#if 1		// LED driver
+		for(uint8_t i = 0; i < LINE_NUM; i++) {
+			set_line(i);
+			set_data(i);
+		}
+#else
 		HAL_Delay(1000);
-		LOG_DBG("delay 1s\n");
+		LOG_DBG("delay 1s by HAL\n");
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -151,9 +199,34 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void set_line(uint8_t line)
 {
+	HB_LOW;
 	for(uint8_t i = 0; i < LINE_NUM; i++) {
-		
+		HA_LOW;
+		(i == line) ? HC_HIGH : HC_LOW;
+		LED_DELAY_US(1);
+		HA_HIGH;
+		LED_DELAY_US(1);
 	}
+	HB_HIGH;
+}
+
+void set_data(uint8_t line)
+{
+	for(uint8_t i = 0; i < CLOUMN_NUM; i++) {
+		CLK_LOW;
+		(color[line][0] & (1 << i)) ? DRI_HIGH : DRI_LOW;
+		(color[line][1] & (1 << i)) ? DGI_HIGH : DGI_LOW;
+		(color[line][2] & (1 << i)) ? DBI_HIGH : DBI_LOW;
+		LED_DELAY_US(1);
+		CLK_HIGH;
+		LED_DELAY_US(1);
+	}
+	LAT_HIGH;
+	LED_DELAY_US(1);
+	LAT_LOW;
+	OE_LOW;
+	LED_DELAY_US(1000);
+	OE_HIGH;
 }
 /* USER CODE END 4 */
 
