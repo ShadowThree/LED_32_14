@@ -131,8 +131,8 @@ int main(void)
 
 	// color value init
 	for(uint8_t i = 0; i < LINE_NUM; i++) {
-		color[i][0] = 0xFFFFFFFF;
-		color[i][1] = 0;
+		color[i][0] = 0;
+		color[i][1] = 0xFFFFFFFF;
 		color[i][2] = 0;
 	}
   /* USER CODE END 2 */
@@ -141,10 +141,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-#if 1		// LED driver
+#if 1		// line scan
 		for(uint8_t i = 0; i < LINE_NUM; i++) {
 			set_line(i);
 			set_data(i);
+			HAL_Delay(1000);
+		}
+#elif 0	// cloumn scan
+		for(uint8_t i = 0; i < 32; i++) {
+			for(uint8_t j = 0; j < LINE_NUM; j++) {
+				set_line(j);
+				set_data(j);
+			}
+			HAL_Delay(200);
+			for(uint8_t i = 0; i < LINE_NUM; i++) {
+				color[i][1] <<= 1;
+			}
+		}
+		for(uint8_t i = 0; i < LINE_NUM; i++) {
+			color[i][1] = 1;
 		}
 #else
 		HAL_Delay(1000);
